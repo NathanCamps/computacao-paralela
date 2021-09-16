@@ -1,1 +1,108 @@
+//Nathan Campos R. da Silva TIA: 31962297
 
+#include <stdio.h>
+#include <unistd.h>
+#include <time.h>
+#include <sys/types.h>
+#include <sys/shm.h>
+
+
+int main(){
+
+    pid_t childpid;
+    int shm_id;
+
+    shm_id = shmget(IPC_PRIVATE, 1024, IPC_CREAT |  0660);
+         if (shm_id < 0) {
+            printf("shmget error\n");
+        }
+
+	int *num = (int*)shmat(shm_id, NULL, 0);
+	int vet[5] = {1,2,3,4,5};
+	int vet2[5] = {5,4,3,2,1};
+
+	printf("         ========= Calculo Paralelo =========\n");
+
+	printf("Digite um valor para multiplicar os outros números do vetor: ");
+	scanf("%d", num);
+
+    childpid = fork();
+    
+
+    if (childpid == 0){
+		time_t start_t, end_t;
+		int diff_t;
+		int s;
+		int e;
+		struct tm *info_s;
+		struct tm *info_e;
+
+		printf("ID da operação pai = %i\n",childpid);
+		time(&start_t);
+
+		info_s = gmtime(&start_t);
+
+		s = info_s->tm_sec;
+
+		printf("Novo vetor = { ");
+		for(int i=0;i<5;i++){
+			vet[i] = vet[i] * (*num);
+			printf("%d ", vet[i]);
+		}
+		printf("}\n");
+
+		sleep(1);
+
+		time(&end_t);
+
+		info_e = gmtime(&end_t);
+
+		e = info_e->tm_sec;
+
+		diff_t = e - s;
+
+		printf("Duração desta operação: %d\n\n", diff_t);
+	}
+    else{ 
+        wait(NULL);
+
+		time_t start_t, end_t;
+		int diff_t2;
+		int start2;
+		int end2;
+		struct tm *info_s2;
+		struct tm *info_e2;
+
+		printf("ID da operação filho = %i\n",childpid);
+
+		time(&start_t);
+
+		info_s2 = gmtime(&start_t);
+
+		start2 = info_s2->tm_sec;
+
+		printf("Novo vetor = { ");
+
+		for(int j=0;j<5;j++){
+			vet2[j] = vet2[j] * vet[j];
+			printf("%d ", vet2[j]);
+		}
+
+		printf("}\n");
+
+		sleep(1);
+
+		time(&end_t);
+
+		info_e2 = gmtime(&end_t);
+
+		end2 = info_e2->tm_sec;
+
+		diff_t2 = end2 - start2;
+
+		printf("Duração desta operação: %d\n\n", diff_t2);
+   
+    }
+
+    return 0;
+}
